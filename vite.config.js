@@ -8,13 +8,13 @@ export default defineConfig({
     tailwindcss(),
   ],
 
-  server: {
-    proxy: {
-      "/api": {
-        target: process.env.VITE_API_PROXY_TARGET || "https://ctdoj.credenz.co.in/",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
-      },
-    },
-  },
+  // server: {
+  //   proxy: {
+  //     "/api": {
+  //       target: process.env.VITE_API_PROXY_TARGET || "https://ctdoj.credenz.co.in/",
+  //       changeOrigin: true,
+  //       rewrite: (path) => path.replace(/^\/api/, ""),
+  //     },
+  //   },
+  // },
 });
