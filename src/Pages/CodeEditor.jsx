@@ -1100,7 +1100,7 @@ useEffect(() => {
         </h3>
 
         <p>
-          {question?.inputFormat ||
+          {question?.input_format ||
             "No input format available."}
         </p>
       </div>
@@ -1111,7 +1111,7 @@ useEffect(() => {
         </h3>
 
         <p>
-          {question?.outputFormat ||
+          {question?.output_format ||
             "No output format available."}
         </p>
       </div>
