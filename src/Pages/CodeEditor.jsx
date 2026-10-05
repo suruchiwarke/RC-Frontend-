@@ -1084,44 +1084,44 @@ useEffect(() => {
   const renderDescription = () => (
     <>
       <div className="problem-section">
-        <h3>
+        <h3 className="problem-format-heading">
           Description
         </h3>
 
-        <p>
+        <p className="problem-format-text">
           {question?.description ||
             "No description available."}
         </p>
       </div>
 
       <div className="problem-section">
-        <h3>
+        <h3 className="problem-format-heading">
           Input Format
         </h3>
 
-        <p>
+        <p className="problem-format-text">
           {question?.input_format ||
             "No input format available."}
         </p>
       </div>
 
       <div className="problem-section">
-        <h3>
+        <h3 className="problem-format-heading">
           Output Format
         </h3>
 
-        <p>
+        <p className="problem-format-text">
           {question?.output_format ||
             "No output format available."}
         </p>
       </div>
 
       <div className="problem-section">
-        <h3>
+        <h3 className="problem-format-heading">
           Constraints
         </h3>
 
-        <p>
+        <p className="problem-format-text">
           {question?.constraints ||
             "No constraints available."}
         </p>
