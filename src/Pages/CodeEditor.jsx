@@ -350,34 +350,34 @@ const handleEditorMount = (editor, monaco) => {
     event.stopPropagation();
   };
 
-  const blockClipboardShortcut = (event) => {
-    const key = event.key.toLowerCase();
-    const hasCommandModifier = event.ctrlKey || event.metaKey;
-    const isClipboardShortcut =
-      (hasCommandModifier && ["c", "x", "v"].includes(key)) ||
-      (event.ctrlKey && key === "insert") ||
-      (event.shiftKey && key === "insert") ||
-      (event.shiftKey && key === "delete");
+  // const blockClipboardShortcut = (event) => {
+  //   const key = event.key.toLowerCase();
+  //   const hasCommandModifier = event.ctrlKey || event.metaKey;
+  //   const isClipboardShortcut =
+  //     (hasCommandModifier && ["c", "x", "v"].includes(key)) ||
+  //     (event.ctrlKey && key === "insert") ||
+  //     (event.shiftKey && key === "insert") ||
+  //     (event.shiftKey && key === "delete");
 
-    if (isClipboardShortcut) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  };
+  //   if (isClipboardShortcut) {
+  //     event.preventDefault();
+  //     event.stopPropagation();
+  //   }
+  // };
 
-  const clipboardEvents = ["copy", "cut", "paste", "drop"];
+  // const clipboardEvents = ["copy", "cut", "paste", "drop"];
 
-  clipboardEvents.forEach((eventName) => {
-    domNode.addEventListener(eventName, blockClipboard, true);
-  });
-  domNode.addEventListener("keydown", blockClipboardShortcut, true);
+  // clipboardEvents.forEach((eventName) => {
+  //   domNode.addEventListener(eventName, blockClipboard, true);
+  // });
+  // domNode.addEventListener("keydown", blockClipboardShortcut, true);
 
-  monacoCleanupRef.current = () => {
-    clipboardEvents.forEach((eventName) => {
-      domNode.removeEventListener(eventName, blockClipboard, true);
-    });
-    domNode.removeEventListener("keydown", blockClipboardShortcut, true);
-  };
+  // monacoCleanupRef.current = () => {
+  //   clipboardEvents.forEach((eventName) => {
+  //     domNode.removeEventListener(eventName, blockClipboard, true);
+  //   });
+  //   domNode.removeEventListener("keydown", blockClipboardShortcut, true);
+  // };
 };
 
   /* =======================================================
