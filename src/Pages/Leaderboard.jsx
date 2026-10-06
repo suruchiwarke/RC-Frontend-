@@ -16,7 +16,6 @@ function formatSubmissionTime(value) {
   }
 
   return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
 }
