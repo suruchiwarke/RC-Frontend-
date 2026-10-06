@@ -1121,7 +1121,7 @@ useEffect(() => {
           Constraints
         </h3>
 
-        <p className="problem-format-text">
+        <p className="problem-format-text problem-constraints-text">
           {question?.constraints ||
             "No constraints available."}
         </p>
