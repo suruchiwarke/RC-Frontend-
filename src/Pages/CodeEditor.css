@@ -1031,6 +1031,11 @@
     );
 
   box-sizing: border-box;
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 
   transition:
     border-color 0.2s ease,
@@ -1049,6 +1054,25 @@
     );
 
   transform: translateY(-1px);
+}
+
+.submission-item.selected {
+  border-color: rgba(82, 219, 169, 0.85);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(7, 58, 48, 0.95),
+      rgba(5, 42, 36, 0.9)
+    );
+
+  box-shadow: 0 0 0 1px rgba(82, 219, 169, 0.18);
+}
+
+.submission-code-error {
+  margin: 10px 0 0;
+  color: #ffaaaa;
+  font-size: 12px;
 }
 
 

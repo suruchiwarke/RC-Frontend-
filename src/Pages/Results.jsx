@@ -6,6 +6,7 @@ import {
   Target,
   BarChart3,
   ArrowRight,
+  Users,
 } from "lucide-react";
 
 import Navbar from "../components/Navbar";
@@ -22,12 +23,13 @@ function Results() {
   ========================================================= */
 
   const [resultData, setResultData] = useState({
-    rank: 0,
-    score: 0,
-    totalSubmissions: 0,
-    accuracy: 0,
     teamname: "",
     isjunior: false,
+    rank: 0,
+    totalScore: 0,
+    totalSubmissions: 0,
+    problemsSolved: 0,
+    accuracy: 0,
   });
 
   const [loading, setLoading] = useState(true);
@@ -45,85 +47,61 @@ function Results() {
       try {
         const response = await api.get("/result/");
 
+        console.log("Results API response:", response.data);
+
         /*
-         * Backend normally returns an array.
-         * If it returns a single object, handle that too.
+         * Backend response:
+         *
+         * {
+         *   teamname: "rcj",
+         *   isjunior: true,
+         *   rank: 1,
+         *   total_score: 400,
+         *   total_submissions: 30,
+         *   problems_solved: "20",
+         *   accuracy: "66.67%"
+         * }
          */
 
-        const data = Array.isArray(response.data)
-          ? response.data
-          : response.data?.results ||
-            response.data?.data ||
-            [];
+        const data = response.data;
 
-        if (!Array.isArray(data) || data.length === 0) {
-          setResultData({
-            rank: 0,
-            score: 0,
-            totalSubmissions: 0,
-            accuracy: 0,
-            teamname: "",
-            isjunior: false,
-          });
-
+        if (!data || typeof data !== "object") {
+          setError("No result data available.");
           return;
         }
 
         /*
-         * Find the current user's result.
+         * Accuracy comes from backend as:
          *
-         * The backend result endpoint can return
-         * multiple team results, so use the stored
-         * currentUser/teamname when available.
+         * "66.67%"
+         *
+         * Remove "%" before converting to number.
          */
 
-        let currentResult = data[0];
-
-        try {
-          const storedUser =
-            JSON.parse(
-              localStorage.getItem("currentUser")
-            );
-
-          if (storedUser?.teamname) {
-            const matchedResult = data.find(
-              (item) =>
-                String(item.teamname || "").toLowerCase() ===
-                String(storedUser.teamname).toLowerCase()
-            );
-
-            if (matchedResult) {
-              currentResult = matchedResult;
-            }
-          }
-        } catch (storageError) {
-          console.warn(
-            "Unable to read current user:",
-            storageError
-          );
-        }
+        const accuracyValue = parseFloat(
+          String(data.accuracy ?? "0").replace("%", "")
+        );
 
         setResultData({
-          rank:
-            Number(currentResult.rank) || 0,
+          teamname: data.teamname || "",
 
-          score:
-            Number(currentResult.total_score) || 0,
+          isjunior: Boolean(data.isjunior),
+
+          rank: Number(data.rank) || 0,
+
+          totalScore:
+            Number(data.total_score) || 0,
 
           totalSubmissions:
-            Number(
-              currentResult.total_submissions ??
-                currentResult.totalSubmissions
-            ) || 0,
+            Number(data.total_submissions) || 0,
+
+          problemsSolved:
+            Number(data.problems_solved) || 0,
 
           accuracy:
-            Number(currentResult.accuracy) || 0,
-
-          teamname:
-            currentResult.teamname || "",
-
-          isjunior:
-            Boolean(currentResult.isjunior),
+            Number.isFinite(accuracyValue)
+              ? accuracyValue
+              : 0,
         });
       } catch (err) {
         console.error(
@@ -229,7 +207,7 @@ function Results() {
 
       <main className="results-container">
 
-        {/* HEADER */}
+        {/* ================= HEADER ================= */}
 
         <div className="results-title">
 
@@ -250,16 +228,29 @@ function Results() {
               Here's how you performed in the event
             </p>
 
-            {resultData.teamname && (
-              <p>
-                Team:{" "}
-                <strong>
-                  {resultData.teamname}
-                </strong>
-              </p>
-            )}
-
           </div>
+
+        </div>
+
+        {/* ================= TEAM NAME ================= */}
+
+        <div className="result-team">
+
+          <Users size={17} />
+
+          <span>
+            Team:
+          </span>
+
+          <strong>
+            {resultData.teamname || "-"}
+          </strong>
+
+          <span className="team-category">
+            {resultData.isjunior
+              ? "Junior"
+              : "Senior"}
+          </span>
 
         </div>
 
@@ -267,7 +258,7 @@ function Results() {
 
         <div className="results-content">
 
-          {/* LEFT SIDE - STAT CARDS */}
+          {/* ================= LEFT SIDE ================= */}
 
           <div className="results-left">
 
@@ -300,7 +291,7 @@ function Results() {
                 </div>
 
                 <div className="result-value">
-                  {resultData.score}
+                  {resultData.totalScore}
                 </div>
 
                 <div className="result-label">
@@ -327,9 +318,27 @@ function Results() {
 
               </div>
 
-              {/* ACCURACY */}
+              {/* PROBLEMS SOLVED */}
 
               <div className="result-card">
+
+                <div className="result-card-icon">
+                  <Target size={16} />
+                </div>
+
+                <div className="result-value">
+                  {resultData.problemsSolved}
+                </div>
+
+                <div className="result-label">
+                  Total correct submissions
+                </div>
+
+              </div>
+
+              {/* ACCURACY */}
+
+              {/* <div className="result-card">
 
                 <div className="result-card-icon">
                   <BarChart3 size={16} />
@@ -343,11 +352,11 @@ function Results() {
                   Accuracy
                 </div>
 
-              </div>
+              </div> */}
 
             </div>
 
-            {/* VIEW LEADERBOARD */}
+            {/* ================= LEADERBOARD ================= */}
 
             <button
               className="leaderboard-btn"

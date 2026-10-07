@@ -185,7 +185,7 @@ export default function Leaderboard() {
 
           <div>
             <h1>
-              LEADERBOARDS
+              LEADERBOARD
             </h1>
 
             <p>

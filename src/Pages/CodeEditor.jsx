@@ -34,6 +34,20 @@ function encodeBase64(str = "") {
   return btoa(binary);
 }
 
+function decodeBase64(str) {
+  if (typeof str !== "string") {
+    throw new Error("Submission code is missing.");
+  }
+
+  const binary = atob(str);
+  const bytes = Uint8Array.from(
+    binary,
+    (character) => character.charCodeAt(0)
+  );
+
+  return new TextDecoder().decode(bytes);
+}
+
 /* =========================================================
    LANGUAGE MAPPING
    Frontend display → Backend value
@@ -49,6 +63,20 @@ function getBackendLanguage(language) {
   }
 
   return "python";
+}
+
+function getEditorLanguage(language) {
+  switch (String(language).toLowerCase()) {
+    case "cpp":
+    case "c++":
+      return "C++";
+    case "java":
+      return "Java";
+    case "python":
+      return "Python";
+    default:
+      return null;
+  }
 }
 
 function formatSubmissionDate(value) {
@@ -210,6 +238,12 @@ function CodeEditor() {
   const [submissions, setSubmissions] =
     useState([]);
 
+  const [selectedSubmissionKey, setSelectedSubmissionKey] =
+    useState(null);
+
+  const [submissionCodeError, setSubmissionCodeError] =
+    useState("");
+
 
   const [machineInput, setMachineInput] = useState("");
   const [machineOutput, setMachineOutput] = useState("");
@@ -350,34 +384,34 @@ const handleEditorMount = (editor, monaco) => {
     event.stopPropagation();
   };
 
-  // const blockClipboardShortcut = (event) => {
-  //   const key = event.key.toLowerCase();
-  //   const hasCommandModifier = event.ctrlKey || event.metaKey;
-  //   const isClipboardShortcut =
-  //     (hasCommandModifier && ["c", "x", "v"].includes(key)) ||
-  //     (event.ctrlKey && key === "insert") ||
-  //     (event.shiftKey && key === "insert") ||
-  //     (event.shiftKey && key === "delete");
+  const blockClipboardShortcut = (event) => {
+    const key = event.key.toLowerCase();
+    const hasCommandModifier = event.ctrlKey || event.metaKey;
+    const isClipboardShortcut =
+      (hasCommandModifier && ["c", "x", "v"].includes(key)) ||
+      (event.ctrlKey && key === "insert") ||
+      (event.shiftKey && key === "insert") ||
+      (event.shiftKey && key === "delete");
 
-  //   if (isClipboardShortcut) {
-  //     event.preventDefault();
-  //     event.stopPropagation();
-  //   }
-  // };
+    if (isClipboardShortcut) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
 
-  // const clipboardEvents = ["copy", "cut", "paste", "drop"];
+  const clipboardEvents = ["copy", "cut", "paste", "drop"];
 
-  // clipboardEvents.forEach((eventName) => {
-  //   domNode.addEventListener(eventName, blockClipboard, true);
-  // });
-  // domNode.addEventListener("keydown", blockClipboardShortcut, true);
+  clipboardEvents.forEach((eventName) => {
+    domNode.addEventListener(eventName, blockClipboard, true);
+  });
+  domNode.addEventListener("keydown", blockClipboardShortcut, true);
 
-  // monacoCleanupRef.current = () => {
-  //   clipboardEvents.forEach((eventName) => {
-  //     domNode.removeEventListener(eventName, blockClipboard, true);
-  //   });
-  //   domNode.removeEventListener("keydown", blockClipboardShortcut, true);
-  // };
+  monacoCleanupRef.current = () => {
+    clipboardEvents.forEach((eventName) => {
+      domNode.removeEventListener(eventName, blockClipboard, true);
+    });
+    domNode.removeEventListener("keydown", blockClipboardShortcut, true);
+  };
 };
 
   /* =======================================================
@@ -454,6 +488,10 @@ useEffect(() => {
       return;
     }
 
+    if (selectedSubmissionKey !== null) {
+      return;
+    }
+
     const savedCode =
       localStorage.getItem(
         `code_q${question.id}_${language}`
@@ -467,14 +505,14 @@ useEffect(() => {
           defaultCode.Python
       );
     }
-  }, [question, language]);
+  }, [question, language, selectedSubmissionKey]);
 
   /* =======================================================
      AUTO SAVE CODE
   ======================================================= */
 
   useEffect(() => {
-    if (!question?.id) {
+    if (!question?.id || selectedSubmissionKey !== null) {
       return;
     }
 
@@ -488,7 +526,7 @@ useEffect(() => {
     return () => {
       clearTimeout(timer);
     };
-  }, [code, question, language]);
+  }, [code, question, language, selectedSubmissionKey]);
 
   /* =======================================================
      FETCH SUBMISSION HISTORY
@@ -531,6 +569,8 @@ useEffect(() => {
   ======================================================= */
 
   const handleLanguageChange = (event) => {
+    setSelectedSubmissionKey(null);
+    setSubmissionCodeError("");
     setLanguage(event.target.value);
 
     setShowResults(false);
@@ -1237,14 +1277,51 @@ useEffect(() => {
                 String(status).toLowerCase() ===
                 "accepted";
 
+              const submissionKey =
+                submission.id ||
+                submission.submission_id ||
+                index;
+
               return (
-                <div
-                  className="submission-item"
-                  key={
-                    submission.id ||
-                    submission.submission_id ||
-                    index
+                <button
+                  type="button"
+                  className={
+                    selectedSubmissionKey === submissionKey
+                      ? "submission-item selected"
+                      : "submission-item"
                   }
+                  key={submissionKey}
+                  aria-pressed={
+                    selectedSubmissionKey === submissionKey
+                  }
+                  onClick={() => {
+                    try {
+                      const submissionLanguage =
+                        getEditorLanguage(submission.language);
+
+                      if (!submissionLanguage) {
+                        throw new Error(
+                          `Unsupported submission language: ${submission.language}`
+                        );
+                      }
+
+                      const decodedCode =
+                        decodeBase64(submission.code);
+
+                      setSubmissionCodeError("");
+                      setSelectedSubmissionKey(submissionKey);
+                      setLanguage(submissionLanguage);
+                      setCode(decodedCode);
+                    } catch (error) {
+                      console.error(
+                        "Unable to display submission code:",
+                        error
+                      );
+                      setSubmissionCodeError(
+                        "Unable to display this submission's code."
+                      );
+                    }
+                  }}
                 >
                   <div>
                     <strong>
@@ -1276,11 +1353,17 @@ useEffect(() => {
                         "--"}
                     </span>
                   </div>
-                </div>
+                </button>
               );
             }
           )}
         </div>
+      )}
+
+      {submissionCodeError && (
+        <p className="submission-code-error" role="alert">
+          {submissionCodeError}
+        </p>
       )}
     </div>
   );
@@ -1438,10 +1521,10 @@ useEffect(() => {
                   "Question"}
               </h1>
 
-              <p className="problem-points">
+              {/* <p className="problem-points">
                 Points:{" "}
                 {question?.points ?? 0}
-              </p>
+              </p> */}
             </div>
 
             {/* DESCRIPTION */}

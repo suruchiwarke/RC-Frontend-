@@ -86,7 +86,7 @@ function Navbar() {
             }`
           }
         >
-          LEADERBOARDS
+          LEADERBOARD
         </NavLink>
 
       </div>
